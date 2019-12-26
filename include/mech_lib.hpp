@@ -6,8 +6,8 @@ void armControl(void * ignore);
 
 void intake(int speed);
 
-void releaseCubes();
-void stackCubes();
+void lowerTray();
+void raiseTray();
 
 void highTower();
 void lowTower();

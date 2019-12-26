@@ -1,6 +1,7 @@
 #include "main.h"
 #include "base_lib.hpp"
 #include "mech_lib.hpp"
+#include "driver_funcs.hpp"
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -14,7 +15,7 @@ void initialize() {
 	Motor BL(BLPort, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
 	Motor FR(FRPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
 	Motor BR(BRPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-	Motor arm(armPort, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
+	Motor arm(armPort, E_MOTOR_GEARSET_36, true, E_MOTOR_ENCODER_DEGREES);
 	Motor lRoller(lRollerPort, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
 	Motor rRoller(rRollerPort, E_MOTOR_GEARSET_36, true, E_MOTOR_ENCODER_DEGREES);
 	Motor tray(trayPort, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
@@ -74,9 +75,23 @@ void opcontrol() {
 	double left;
 	double right;
 	bool armUp = false;
+	bool isTank = true;
 	while(true) {
-		left = master.get_analog(ANALOG_LEFT_Y);
-		right = master.get_analog(ANALOG_RIGHT_Y);
+		if(master.get_digital_new_press(DIGITAL_Y)) {
+			isTank = !isTank;
+		}
+
+		if(isTank) {
+			left = master.get_analog(ANALOG_LEFT_Y);
+			right = master.get_analog(ANALOG_RIGHT_Y);
+		}else {
+			double power = master.get_analog(ANALOG_LEFT_Y);
+			double turn = master.get_analog(ANALOG_RIGHT_X);
+
+			left = power + turn;
+			right = power - turn;
+		}
+
 		base(left, right);
 
 		if(master.get_digital(DIGITAL_R1)) {
@@ -88,14 +103,9 @@ void opcontrol() {
 		}
 
 		if(master.get_digital(DIGITAL_X)) {
-			stackCubes();
+			raiseTray();
 		}else if(master.get_digital(DIGITAL_A)) {
 			releaseCubes();
-			base(-30, -30);
-			intake(-100);
-			delay(1000);
-			intake(0);
-			base(0, 0);
 		}
 
 		if(master.get_digital_new_press(DIGITAL_L1)) {

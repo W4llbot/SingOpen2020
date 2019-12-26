@@ -18,25 +18,41 @@ void intake(int speed) {
 }
 
 void trayControl(void * ignore) {
+  double kP = 0.2, rampAmount = 3;
+  double speed = 0,  prevError = trayTarget - tray.get_position();
+
   tray.tare_position();
   trayTarget = 10;
 
   while(true) {
-    int power = trayTarget - tray.get_position();
-    tray.move(power * 0.5);
+    // pd control
+    double error = trayTarget - tray.get_position();
+
+    double targetSpeed = error*kP;
+
+    // ramping (only one directional)
+    if(speed - targetSpeed > rampAmount) speed -= rampAmount;
+    else speed = targetSpeed;
+
+    // apply motion
+    tray.move(speed);
+
+    // set prev values
+    prevError = error;
+
+    // debug
+    printf("%.2f \n", error*kP);
 
     delay(25);
   }
 }
 
-void releaseCubes() {
+void lowerTray() {
   trayTarget = 10;
-  double start = millis();
-  while(tray.get_position() > 50 && millis() - start < 3000) {}
 }
 
-void stackCubes() {
-  trayTarget = 600;
+void raiseTray() {
+  trayTarget = 675;
 }
 
 void armControl(void * ignore) {
@@ -51,15 +67,21 @@ void armControl(void * ignore) {
 
 void lowTower() {
   trayTarget = 250;
+  double start = millis();
+  while(tray.get_position() < 250 && millis() - start < 3000)
   armTarget = LOW_TOWER_RIGHT;
 }
 
 void highTower() {
   trayTarget = 250;
+  double start = millis();
+  while(tray.get_position() < 250 && millis() - start < 3000)
   armTarget = HIGH_TOWER_HEIGHT;
 }
 
 void armDown() {
-  trayTarget = 10;
   armTarget = 0;
+  double start = millis();
+  while(arm.get_position() > 50 && millis() - start < 3000)
+  trayTarget = 10;
 }
