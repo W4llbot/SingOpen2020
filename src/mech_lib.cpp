@@ -1,7 +1,7 @@
 #include "main.h"
 #include "mech_lib.hpp"
 
-#define LOW_TOWER_RIGHT 300
+#define LOW_TOWER_RIGHT 270
 #define HIGH_TOWER_HEIGHT 400
 
 Motor lRoller(lRollerPort);
@@ -10,7 +10,7 @@ Motor tray(trayPort);
 Motor arm(armPort);
 
 int trayTarget = 0;
-int armTarget = 0;
+int armTarget = -30;
 
 void intake(int speed) {
   lRoller.move(speed);
@@ -18,14 +18,14 @@ void intake(int speed) {
 }
 
 void trayControl(void * ignore) {
-  double kP = 0.2, rampAmount = 3;
-  double speed = 0,  prevError = trayTarget - tray.get_position();
+  double kP = 0.20, rampAmount = 3;
+  double integral = 0, speed = 0,  prevError = trayTarget - tray.get_position();
 
   tray.tare_position();
   trayTarget = 10;
 
   while(true) {
-    // pd control
+    // pi control
     double error = trayTarget - tray.get_position();
 
     double targetSpeed = error*kP;
@@ -41,47 +41,47 @@ void trayControl(void * ignore) {
     prevError = error;
 
     // debug
-    printf("%.2f \n", error*kP);
+    // printf("%.2f\n", error);
 
     delay(25);
   }
 }
 
 void lowerTray() {
-  trayTarget = 10;
+  trayTarget = 0;
 }
 
 void raiseTray() {
-  trayTarget = 675;
+  trayTarget = 700;
 }
 
 void armControl(void * ignore) {
   arm.tare_position();
 
   while(true) {
-    arm.move(armTarget - arm.get_position());
+    double error = armTarget - arm.get_position();
+    arm.move(error);
 
     delay(25);
   }
 }
 
+void lowerCube() {
+  intake(-80);
+  delay(300);
+  intake(0);
+}
+
 void lowTower() {
-  trayTarget = 250;
-  double start = millis();
-  while(tray.get_position() < 250 && millis() - start < 3000)
+  // lowerCube();
   armTarget = LOW_TOWER_RIGHT;
 }
 
 void highTower() {
-  trayTarget = 250;
-  double start = millis();
-  while(tray.get_position() < 250 && millis() - start < 3000)
+  // lowerCube();
   armTarget = HIGH_TOWER_HEIGHT;
 }
 
 void armDown() {
-  armTarget = 0;
-  double start = millis();
-  while(arm.get_position() > 50 && millis() - start < 3000)
-  trayTarget = 10;
+  armTarget = -30;
 }

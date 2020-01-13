@@ -1,4 +1,5 @@
 #include "main.h"
+#include "autons.hpp"
 #include "base_lib.hpp"
 #include "mech_lib.hpp"
 #include "driver_funcs.hpp"
@@ -15,7 +16,7 @@ void initialize() {
 	Motor BL(BLPort, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
 	Motor FR(FRPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
 	Motor BR(BRPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-	Motor arm(armPort, E_MOTOR_GEARSET_36, true, E_MOTOR_ENCODER_DEGREES);
+	Motor arm(armPort, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
 	Motor lRoller(lRollerPort, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
 	Motor rRoller(rRollerPort, E_MOTOR_GEARSET_36, true, E_MOTOR_ENCODER_DEGREES);
 	Motor tray(trayPort, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
@@ -51,7 +52,13 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+	Task basOdom(baseOdometry, NULL, "");
+	Task basControl(baseControl, NULL, "");
+	Task basMotorControl(baseMotorControl, NULL, "");
+	Task trayController(trayControl, NULL, "");
+	Task armController(armControl, NULL, "");
 
+	redBack();
 }
 
 /**
@@ -70,6 +77,7 @@ void autonomous() {
 void opcontrol() {
 	Task trayController(trayControl, NULL, "");
 	Task armController(armControl, NULL, "");
+	Task basOdom(baseOdometry, NULL, "");
 	Controller master(E_CONTROLLER_MASTER);
 
 	double left;
